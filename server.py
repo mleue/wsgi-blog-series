@@ -1,15 +1,31 @@
 from typing import Tuple
 import socket
 import threading
+from httptools import HttpRequestParser
+from http_request import HttpRequestParserProtocol
+from http_response import make_response
 
 
 def handle_socket(client_socket, address: Tuple[str, int]):
+    response_sent = False
+
+    def send_response():
+        body = b"<html><body>Hello World</body></html>"
+        response = make_response(status_code=200, headers=[], body=body)
+        client_socket.send(response)
+        print("Response sent.")
+        nonlocal response_sent
+        response_sent = True
+
+    protocol = HttpRequestParserProtocol(send_response)
+    parser = HttpRequestParser(protocol)
+
     while True:
+        if response_sent:
+            break
         data = client_socket.recv(1024)
         print(f"Received {data}")
-        if data == b"":
-            break
-        client_socket.send(data)
+        parser.feed_data(data)
     client_socket.close()
     print(f"Socket with {address} closed.")
 
