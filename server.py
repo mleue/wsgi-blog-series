@@ -6,28 +6,30 @@ from http_request import HttpRequestParserProtocol
 from http_response import make_response
 
 
-def handle_socket(client_socket, address: Tuple[str, int]):
-    response_sent = False
+class Session:
+    def __init__(self, client_socket, address):
+        self.client_socket = client_socket
+        self.address = address
+        self.response_sent = False
+        protocol = HttpRequestParserProtocol(self.send_response)
+        self.parser = HttpRequestParser(protocol)
 
-    def send_response():
+    def run(self):
+        while True:
+            if self.response_sent:
+                break
+            data = self.client_socket.recv(1024)
+            print(f"Received {data}")
+            self.parser.feed_data(data)
+        self.client_socket.close()
+        print(f"Socket with {self.address} closed.")
+
+    def send_response(self):
         body = b"<html><body>Hello World</body></html>"
         response = make_response(status_code=200, headers=[], body=body)
-        client_socket.send(response)
+        self.client_socket.send(response)
         print("Response sent.")
-        nonlocal response_sent
-        response_sent = True
-
-    protocol = HttpRequestParserProtocol(send_response)
-    parser = HttpRequestParser(protocol)
-
-    while True:
-        if response_sent:
-            break
-        data = client_socket.recv(1024)
-        print(f"Received {data}")
-        parser.feed_data(data)
-    client_socket.close()
-    print(f"Socket with {address} closed.")
+        self.response_sent = True
 
 
 def serve_forever(host: str, port: int):
@@ -38,9 +40,8 @@ def serve_forever(host: str, port: int):
     while True:
         client_socket, address = server_socket.accept()
         print(f"Socket established with {address}.")
-        t = threading.Thread(
-            target=handle_socket, args=(client_socket, address)
-        )
+        session = Session(client_socket, address)
+        t = threading.Thread(target=session.run)
         t.start()
 
 
