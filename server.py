@@ -1,7 +1,7 @@
 from typing import Tuple
 import socket
 import threading
-from httptools import HttpRequestParser
+from http_parse import HttpRequestParser
 from http_request import HttpRequestParserProtocol
 from http_response import make_response
 

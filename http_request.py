@@ -6,7 +6,7 @@ class HttpRequestParserProtocol:
         self.send_response = send_response
 
     # parser callbacks
-    def on_url(self, url):
+    def on_url(self, url: bytes):
         print(f"Received url: {url}")
         self.headers = []
 
