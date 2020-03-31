@@ -1,29 +1,24 @@
 from typing import List, Tuple
-import http
 
 
-def create_status_line(status_code: int = 200):
-    code = str(status_code).encode()
-    code_phrase = http.HTTPStatus(status_code).phrase.encode()
-    return b"HTTP/1.1 " + code + b" " + code_phrase + b"\r\n"
+def create_status_line(status: str = "200 OK") -> str:
+    return f"HTTP/1.1 {status}\r\n"
 
 
-def format_headers(headers: List[Tuple[bytes, bytes]]):
-    return b"".join([key + b": " + value + b"\r\n" for key, value in headers])
+def format_headers(headers: List[Tuple[str, str]]) -> str:
+    return "".join([f"{key}: {value}\r\n" for key, value in headers])
 
 
 def make_response(
-    status_code: int = 200,
-    headers: List[Tuple[bytes, bytes]] = None,
+    status: str = "200 OK",
+    headers: List[Tuple[str, str]] = None,
     body: bytes = b"",
 ):
     if headers is None:
         headers = []
-    if body:
-        headers.append((b"Content-Length", str(len(body)).encode("utf-8")))
     content = [
-        create_status_line(status_code),
-        format_headers(headers),
+        create_status_line(status).encode("utf-8"),
+        format_headers(headers).encode("utf-8"),
         b"\r\n" if body else b"",
         body,
     ]

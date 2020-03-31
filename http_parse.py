@@ -30,6 +30,7 @@ class HttpRequestParser:
         line = self.buffer.pop(separator=b"\r\n")
         if line is not None:
             http_method, url, http_version = line.strip().split()
+            self.http_method = http_method
             self.done_parsing_start = True
             self.protocol.on_url(url)
             self.parse()
