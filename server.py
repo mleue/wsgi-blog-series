@@ -2,7 +2,6 @@ from typing import Tuple
 import socket
 import threading
 from http_parse import HttpRequestParser
-from http_request import HttpRequestParserProtocol
 from http_response import make_response
 
 
@@ -11,8 +10,7 @@ class Session:
         self.client_socket = client_socket
         self.address = address
         self.response_sent = False
-        protocol = HttpRequestParserProtocol(self.send_response)
-        self.parser = HttpRequestParser(protocol)
+        self.parser = HttpRequestParser(self)
 
     def run(self):
         while True:
@@ -30,6 +28,24 @@ class Session:
         self.client_socket.send(response)
         print("Response sent.")
         self.response_sent = True
+
+    # parser callbacks
+    def on_url(self, url: bytes):
+        print(f"Received url: {url}")
+        self.http_method = self.parser.http_method.decode("utf-8")
+        self.url = url.decode("utf-8")
+        self.headers = []
+
+    def on_header(self, name: bytes, value: bytes):
+        print(f"Received header: ({name}, {value})")
+        self.headers.append((name, value))
+
+    def on_body(self, body: bytes):
+        print(f"Received body: {body}")
+
+    def on_message_complete(self):
+        print("Received request completely.")
+        self.send_response()
 
 
 def serve_forever(host: str, port: int):
