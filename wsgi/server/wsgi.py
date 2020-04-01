@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
 from io import BytesIO
-from http_response import make_response
+from .http_response import make_response
 
 
 @dataclass
@@ -30,7 +30,6 @@ class WSGIRequest:
             "wsgi.multithread": True,
             "wsgi.multiprocess": False,
             "wsgi.run_once": False,
-            "wsgi.input_terminated": True,
             **{f"HTTP_{name}": value for name, value in self.headers},
         }
         return environ

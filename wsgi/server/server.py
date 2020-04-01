@@ -2,15 +2,15 @@ from typing import Tuple, List
 import socket
 import threading
 from io import BytesIO
-from http_parse import HttpRequestParser
-from wsgi import WSGIRequest, WSGIResponse
-from app import app
+from .http_parse import HttpRequestParser
+from .wsgi import WSGIRequest, WSGIResponse
 
 
 class Session:
-    def __init__(self, client_socket, address):
+    def __init__(self, client_socket, address, app):
         self.client_socket = client_socket
         self.address = address
+        self.app = app
         self.parser = HttpRequestParser(self)
         self.request = WSGIRequest()
         self.response = WSGIResponse()
@@ -45,24 +45,26 @@ class Session:
     def on_message_complete(self):
         print("Received request completely.")
         environ = self.request.to_environ()
-        body_chunks = app(environ, self.response.start_response)
+        body_chunks = self.app(environ, self.response.start_response)
         print("App callable has returned.")
         self.response.body = b"".join(body_chunks)
         self.client_socket.send(self.response.to_http())
 
 
-def serve_forever(host: str, port: int):
-    server_socket = socket.socket()
-    server_socket.bind((host, port))
-    server_socket.listen(1)
+class WSGIServer:
+    def __init__(self, host: str, port: int, app):
+        self.host = host
+        self.port = port
+        self.app = app
 
-    while True:
-        client_socket, address = server_socket.accept()
-        print(f"Socket established with {address}.")
-        session = Session(client_socket, address)
-        t = threading.Thread(target=session.run)
-        t.start()
+    def serve_forever(self):
+        server_socket = socket.socket()
+        server_socket.bind((self.host, self.port))
+        server_socket.listen(1)
 
-
-if __name__ == "__main__":
-    serve_forever("127.0.0.1", 5000)
+        while True:
+            client_socket, address = server_socket.accept()
+            print(f"Socket established with {address}.")
+            session = Session(client_socket, address, self.app)
+            t = threading.Thread(target=session.run)
+            t.start()

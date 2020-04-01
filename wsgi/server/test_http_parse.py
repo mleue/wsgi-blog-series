@@ -1,5 +1,5 @@
 import pytest
-from http_parse import HttpRequestParser
+from .http_parse import HttpRequestParser
 
 
 class TestParserProtocol:
