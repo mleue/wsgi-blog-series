@@ -1,19 +1,17 @@
 from wsgi.server import WSGIServer
-from wsgi.application import WSGIApplication
+from wsgi.application import WSGIApplication, Request
 
 app = WSGIApplication()
 
 
 @app.get("/")
-def root():
-    print("Called root endpoint.")
-    return "hello from /"
+def root(request: Request):
+    return f"hello from / with query {request.query}"
 
 
 @app.post("/create")
-def create():
-    print(f"Called /create endpoint.")
-    return "hello from /create"
+def create(request: Request):
+    return f"hello from /create with request body {request.body}"
 
 
 if __name__ == "__main__":
