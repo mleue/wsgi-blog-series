@@ -1,5 +1,6 @@
 from wsgi.server import WSGIServer
 from wsgi.application import WSGIApplication, Request
+from wsgi.application.response import JSONResponse
 
 app = WSGIApplication()
 
@@ -12,6 +13,11 @@ def root(request: Request):
 @app.post("/create")
 def create(request: Request):
     return f"hello from /create with request body {request.body}"
+
+
+@app.post("/some_json")
+def create(request: Request):
+    return JSONResponse(body={"hello": "world"})
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from typing import Callable
 from dataclasses import dataclass
 from .request import Request
+from .response import PlainTextResponse, BaseResponse
 
 
 class WSGIApplication:
@@ -30,16 +31,16 @@ class WSGIApplication:
         po = PathOperation(environ["PATH_INFO"], environ["REQUEST_METHOD"])
         func = self.path_operations.get(po)
         if func is None:
-            status = "404 NOT FOUND"
-            headers = [("Content-type", "text/plain")]
-            body = b""
+            response = PlainTextResponse(status="404 NOT FOUND")
         else:
             request = Request.from_environ(environ)
-            status = "200 OK"
-            headers = [("Content-type", "text/plain")]
-            body = func(request=request).encode("utf-8")
-        start_response(status, headers)
-        return [body]
+            ret = func(request=request)
+            if isinstance(ret, BaseResponse):
+                response = ret
+            else:
+                response = PlainTextResponse(body=ret)
+        start_response(response.status, response.headers)
+        return [response.body]
 
 
 @dataclass(frozen=True, eq=True)
